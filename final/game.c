@@ -32,6 +32,7 @@ void remove_shot (int* shots, int* numShots)
 {
     display_pixel_set(*shots, *(shots + 1), 0);
     int count = 0;
+    //Iterates through all the shots
     while (count < *numShots - 1) {
         *(shots + (count * 3)) = *(shots + (count * 3) + 3);
         *(shots + (count * 3) + 1) = *(shots + (count * 3) + 4); 
@@ -50,10 +51,12 @@ void remove_shot (int* shots, int* numShots)
  */ 
 void check_shot (int* shots, int* numShots, int playerLoc) 
 {
+    //If the ball is at the end of the matrix and outgoing
     if (*(shots + 1) >= 6 && *(shots + 2) == 0) {
         ir_uart_putc(*shots);
         remove_shot(shots, numShots);
     }
+    //If the ball is on the player column and incoming
     else if (*(shots + 1) <= 1 && *(shots + 2) == 1) {
         if (*shots != playerLoc) {
             ir_uart_putc(5);
@@ -64,17 +67,18 @@ void check_shot (int* shots, int* numShots, int playerLoc)
 
 
 /**
- * Performs a tick on the current shots
+ * Performs a tick on the current shots.
  */ 
 void tick_shots (int* shots, int* numShots, int playerLoc)
 {
     check_shot(shots, numShots, playerLoc);
     int count = 0;
+    //Iterates through all of the shots
     while (count < *numShots) {
+        //If incoming
         if (*(shots + (count * 3) + 2)) {
             *(shots + (count * 3) + 1) -= 1; 
-        }
-        else {
+        } else {
             *(shots + (count * 3) + 1) += 1; 
         }
         count += 1;
@@ -84,18 +88,18 @@ void tick_shots (int* shots, int* numShots, int playerLoc)
 
 
 /**
- * Updates the locations of the current shots on the LED matrix by one tick
+ * Updates the locations of the current shots on the LED matrix by one tick.
  */ 
 void update_shots (int* shots, int* numShots)
 {
     int count = 0;
-
+    //Iterates through all of the shots
     while (count < *numShots) {
         display_pixel_set(*(shots + (count * 3)), *(shots + (count * 3) + 1), 1);
+        //If incoming
         if (*(shots + (count * 3) + 2)) {
             display_pixel_set(*(shots + (count * 3)), *(shots + (count * 3) + 1) + 1, 0);
-        }
-        else {
+        } else {
             display_pixel_set(*(shots + (count * 3)), *(shots + (count * 3) + 1) - 1, 0);
         }
         count += 1;
@@ -113,12 +117,10 @@ void check_stick (int* playerLoc, int* addShot)
         display_pixel_set(*playerLoc, 1, 0);
         *playerLoc += 1;
     
-    }
-    else if (navswitch_push_event_p(NAVSWITCH_WEST) && *playerLoc > 0) {
+    } else if (navswitch_push_event_p(NAVSWITCH_WEST) && *playerLoc > 0) {
         display_pixel_set(*playerLoc, 1, 0);
         *playerLoc -= 1;
-    }
-    else if (navswitch_push_event_p(NAVSWITCH_PUSH)) {
+    } else if (navswitch_push_event_p(NAVSWITCH_PUSH)) {
         *addShot = 1;
     }
     display_pixel_set(*playerLoc, 1, 1);
@@ -153,13 +155,16 @@ void check_infra (int* addShot, int* addLoc, int* score, int* gameover)
 {
     if (ir_uart_read_ready_p()) {
         int received = ir_uart_getc();
+        //If between 0 and 5, recieved is possition of incoming shot
         if (received < 5 && received >= 0) {
             *addShot = 1;
             *addLoc = received;
         }
+        //Goal scored
         else if (received == 5) {
             *score += 1;
         }
+        //If other player has reached 6 goals
         else if (received == 6) {
             *gameover = 1;
         }
@@ -233,16 +238,16 @@ int main (void)
     int playerLoc = 2;
     int gameover = 0;
     
-    //Each shot requires 3 integers. Column, row, direction.
+    //Each shot requires 3 integers. Column, row, direction
     int shots[36] = {0}; 
     int numShots = 0;
     
     welcome_message();
     display_clear();
     
-    while (!gameover)
-    {
+    while (!gameover) {
         pacer_wait();
+        //Tick the shots every 70 base ticks
         if (tick == 70) {
             tick = 0;
             tick_shots(shots, &numShots, playerLoc);

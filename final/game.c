@@ -50,11 +50,11 @@ void remove_shot (int* shots, int* numShots)
  */ 
 void check_shot (int* shots, int* numShots, int playerLoc) 
 {
-    if (*(shots + 1) == 6 && *(shots + 2) == 0) {
+    if (*(shots + 1) >= 6 && *(shots + 2) == 0) {
         ir_uart_putc(*shots);
         remove_shot(shots, numShots);
     }
-    else if (*(shots + 1) == 1 && *(shots + 2) == 1) {
+    else if (*(shots + 1) <= 1 && *(shots + 2) == 1) {
         if (*shots != playerLoc) {
             ir_uart_putc(5);
         }
@@ -234,7 +234,7 @@ int main (void)
     int gameover = 0;
     
     //Each shot requires 3 integers. Column, row, direction.
-    int shots[30] = {0}; 
+    int shots[36] = {0}; 
     int numShots = 0;
     
     welcome_message();
@@ -243,7 +243,7 @@ int main (void)
     while (!gameover)
     {
         pacer_wait();
-        if (tick == 80) {
+        if (tick == 70) {
             tick = 0;
             tick_shots(shots, &numShots, playerLoc);
             if (addOutgoing) {
